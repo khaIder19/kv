@@ -1,0 +1,9 @@
+{
+    "databaseChangeLog": [
+        {
+            "include": {
+                "file": "changelog-0.sql"
+            }
+        }
+    ]
+}
