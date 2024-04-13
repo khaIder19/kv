@@ -1,15 +1,19 @@
 package com.kv.entry.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import java.util.UUID;
 
 /**
  *
@@ -24,31 +28,45 @@ public class FolderPermission extends BaseEntity{
     @GeneratedValue(strategy = GenerationType.SEQUENCE,generator = "seq_gen_id_folder_permission")
     private Long id;
     
-    @Column(name = "user_id",
-            nullable = false,
-            updatable = false)
-    private UUID userId;
+    @OneToOne
+    @JoinColumn(name = "user_id",updatable = false)
+    private EntryUser user;
     
     @Enumerated(value = EnumType.ORDINAL)
     @Column(name = "permission_type",nullable = false)
     private FolderPermissionType permissionType;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "folder_id")
+    @JsonBackReference
+    private Folder folder;
+    
+    
     protected FolderPermission(){}
     
-    public FolderPermission(UUID userId,FolderPermissionType permissionType){
-        this.userId = userId;
+    public FolderPermission(EntryUser user,Folder folder,FolderPermissionType permissionType){
+        this.user = user;
         this.permissionType = permissionType;
+        this.folder = folder;
     }
 
     public Long getId() {
         return id;
     }
 
-    public UUID getUserId() {
-        return userId;
+    public EntryUser getUser() {
+        return user;
     }
 
     public FolderPermissionType getPermissionType() {
         return permissionType;
+    }
+
+    public void setPermissionType(FolderPermissionType permissionType) {
+        this.permissionType = permissionType;
+    }
+
+    public Folder getFolder() {
+        return folder;
     }
 }

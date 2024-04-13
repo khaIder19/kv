@@ -2,6 +2,10 @@ package com.kv.entry.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
+import java.time.Instant;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SourceType;
+import org.hibernate.annotations.UpdateTimestamp;
 
 /**
  *
@@ -10,10 +14,12 @@ import jakarta.persistence.MappedSuperclass;
 @MappedSuperclass
 public class BaseEntity {
     
-    @Column(name = "created_at")
-    private Long createdAt;
+    @CreationTimestamp(source = SourceType.DB)
+    @Column(name = "created_at")    
+    private Instant createdAt;
     
+    @UpdateTimestamp(source = SourceType.DB)
     @Column(name = "updated_at")    
-    private Long updatedAt;
+    private Instant updatedAt;
     
 }
