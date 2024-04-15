@@ -1,0 +1,10 @@
+/*
+ * This file has been created by the Vaadin Theme Editor. Please note that
+ * manual changes to individual CSS properties may be overwritten by the theme editor.
+ */
+vaadin-button.folders-view-button-1 { background-color:rgba(24,58,102,0.28); }
+
+vaadin-horizontal-layout.folders-view-horizontal-layout-1 {
+  background-color:rgba(255,221,221,1);
+  border-radius:var(--lumo-border-radius-m);
+}
