@@ -22,13 +22,13 @@ public class FolderDao implements PanacheRepository<Folder>{
     public List<Folder> findByUserIdAndPermissionType(UUID userId,FolderPermissionType permissionType,Page page){     
         return find("SELECT DISTINCT f FROM Folder f "
                 + "LEFT JOIN FETCH f.permissions fp "
-                + "WHERE fp.user.id = ?1 AND fp.permissionType = ?2", userId,permissionType).page(page).list();
+                + "WHERE fp.user.id = ?1 AND fp.permissionType = ?2 ORDER BY f.createdAt DESC", userId,permissionType).page(page).list();
     }
     
     public List<Folder> findByUserId(UUID userId,Page page){       
         return find("SELECT DISTINCT f FROM Folder f "
                 + "LEFT JOIN FETCH f.permissions fp "
-                + "WHERE fp.user.id = ?1", userId).page(page).list();
+                + "WHERE fp.user.id = ?1 ORDER BY f.createdAt DESC", userId).page(page).list();
     }
     
     public Long deleteByIds(List<Long> ids){

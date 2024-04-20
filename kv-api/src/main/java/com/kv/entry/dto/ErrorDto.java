@@ -5,6 +5,7 @@
 package com.kv.entry.dto;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -28,4 +29,9 @@ public class ErrorDto {
         }
         errors.add(error);
     }
+
+    @Override
+    public String toString() {
+        return Arrays.toString(errors.toArray());
+    }  
 }

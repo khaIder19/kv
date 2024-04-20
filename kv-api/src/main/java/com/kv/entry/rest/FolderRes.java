@@ -16,10 +16,10 @@ import io.quarkus.logging.Log;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
@@ -29,11 +29,12 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.ServiceUnavailableException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
-
+import java.util.UUID;
 /**
  *
  * @author k-iderr
@@ -41,7 +42,7 @@ import java.util.List;
 @Path("/api/folder")
 @Produces(MediaType.APPLICATION_JSON)
 @RequestScoped
-public class FolderRes extends BaseRes{
+public class FolderRes{
        
     @Inject
     private FolderDao dao;
@@ -50,16 +51,21 @@ public class FolderRes extends BaseRes{
     private FolderPermissionDao folderPermissionDao;
     
     @Inject
-    private EntryUserDao userDao;    
+    private EntryUserDao userDao;
+
+    @Inject
+    @Named("subjUUID")
+    private UUID subj;
  
     @GET
-    public Response getAllByUser(@QueryParam("permissionType")FolderPermissionType fPermType,@QueryParam("page")@DefaultValue("0") Integer page,
-            @QueryParam("size")@DefaultValue("50") Integer size){
+    public Response getAllByUser(@QueryParam("permissionType")FolderPermissionType fPermType,@QueryParam("page")Integer index,
+            @QueryParam("size")Integer size){
         List<Folder> resultList = List.of();
+        Page page = index != null && size != null ? Page.of(index, size) : null;
         if(fPermType != null){
-            resultList = dao.findByUserIdAndPermissionType(getPrincipalId(), fPermType,Page.of(page, size));
+            resultList = dao.findByUserIdAndPermissionType(subj, fPermType,page);
         }else{
-            resultList = dao.findByUserId(getPrincipalId(),Page.of(page, size));
+            resultList = dao.findByUserId(subj,page);
         }
         Log.debugf("getAllByUser found list with size : %s", resultList.size());
         return Response.ok(resultList).build();
@@ -95,11 +101,12 @@ public class FolderRes extends BaseRes{
         FolderPermission fp = folderPermissionDao.findById(id);
         if(fp == null) throw new NotFoundException();
         
-        if(fp.getUser().getId().equals(getPrincipalId())) throw new BadRequestException("exc.folder-permission.act.delete.permission_of_owner");
+        if(fp.getUser().getId().equals(subj))
+        throw new BadRequestException("exc.folder-permission.act.delete.permission_of_owner");
 
         //check if is owner or user of the permission
-        if(!fp.getFolder().getOwner().getId().equals(getPrincipalId())){
-            if(!fp.getUser().getId().equals(getPrincipalId())){
+        if(!fp.getFolder().getOwner().getId().equals(subj)){
+            if(!fp.getUser().getId().equals(subj)){
                 throw new ForbiddenException("exc.folder-permission.act.delete.not_owner_of_permission");
             }
         }
@@ -116,7 +123,7 @@ public class FolderRes extends BaseRes{
         FolderPermission folderPermission = folderPermissionDao.findById(id);
         if(folderPermission == null) throw new NotFoundException();     
         
-        if(fp.getUser().getId().equals(getPrincipalId()))
+        if(fp.getUser().getId().equals(subj))
         throw new BadRequestException("exc.folder-permission.act.update.permission_of_owner");
         
         folderPermission.setPermissionType(fp.getPermissionType());        
@@ -126,13 +133,8 @@ public class FolderRes extends BaseRes{
     @Transactional
     @POST
     public Response create(Folder ef){
-        
-        EntryUser entryUser = userDao.findById(getPrincipalId());
-        if(entryUser == null){
-            entryUser = new EntryUser(getPrincipalId(),"usreName");
-            userDao.persist(entryUser);
-            Log.debug("EntryUser first created");            
-        }
+        EntryUser entryUser = userDao.findById(subj);
+        if(entryUser == null)throw new ServiceUnavailableException();
         
         Folder entryFolder = new Folder(ef.getName(),entryUser);
         dao.persist(entryFolder);
@@ -142,15 +144,15 @@ public class FolderRes extends BaseRes{
         return Response.created(URI.create("/folder/"+entryFolder.getId())).entity(entryFolder).build();
     }
     
-    @Transactional
+    @Transactional(value = Transactional.TxType.REQUIRED)
     @Path("/{folderId}")
     @PUT
     @FolderRoleAllowed(FolderPermissionType.OWNER)    
-    public Response update(@PathParam("id")Long id,Folder ef){
+    public Response update(@PathParam("folderId")Long id,Folder ef){
         Folder entryFolder = dao.findById(id);
         if(entryFolder != null){
             entryFolder.setName(ef.getName());
-            return Response.ok(entryFolder).build();
+            return Response.ok().build();
         }else{
             return Response.status(Response.Status.NOT_FOUND).build();
         }

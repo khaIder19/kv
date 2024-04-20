@@ -14,11 +14,9 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.List;
-import java.util.UUID;
-import org.hibernate.annotations.FilterDef;
 
 /**
  *
@@ -38,8 +36,8 @@ public class Folder extends BaseEntity{
     private Long id;
     
     @Column(name = "name")
-    @NotNull
-    @Size(max = 32)
+    @NotBlank(message = "exc.constr.Folder.name.not-null")
+    @Size(max = 32,message = "exc.constr.Folder.name.size")
     private String name;
     
     @OneToOne(cascade = CascadeType.PERSIST)
@@ -75,5 +73,10 @@ public class Folder extends BaseEntity{
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "Folder{" + "id=" + id + ", name=" + name + ", owner=" + owner + '}';
     }
 }

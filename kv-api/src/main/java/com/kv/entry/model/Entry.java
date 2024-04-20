@@ -4,6 +4,7 @@
  */
 package com.kv.entry.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,7 +16,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -36,8 +37,8 @@ public class Entry extends BaseEntity{
     private Long id;
     
     @Column(name = "key")
-    @NotNull
-    @Size(max = 32)
+    @NotBlank(message = "exc.constr.Entry.key.not-null")
+    @Size(max = 32,message = "exc.constr.Entry.key.size")
     private String key;
     
     @Column(name = "value")
@@ -45,7 +46,12 @@ public class Entry extends BaseEntity{
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "folder_id")
+    @JsonIgnore
     private Folder folder;
+    
+    @Column(name = "folder_id",insertable = false,updatable = false)
+    private Long folderId;
+    
     
     protected Entry(){}
     
@@ -53,6 +59,19 @@ public class Entry extends BaseEntity{
         this.folder = folder;
         this.key = key;
         this.value = value;
+        this.folderId = folder.getId();
+    }
+    
+    private Entry(Long id,Long folderId,String key,String value){
+        this.id = id;
+        this.folderId = folderId;
+        this.key = key;
+        this.value = value;
+    }
+    
+    public Entry asPojo(){
+        return new Entry(getId().longValue(), getFolderId().longValue(),
+                getKey().toString(), getValue().toString());
     }
 
     public Long getId() {
@@ -77,5 +96,14 @@ public class Entry extends BaseEntity{
 
     public Folder getFolder() {
         return folder;
+    }
+
+    public Long getFolderId() {
+        return folderId;
+    }
+
+    @Override
+    public String toString() {
+        return "Entry{" + "id=" + id + ", key=" + key + ", value=" + value + ", folder=" + folder + ", folderId=" + folderId + '}';
     }
 }

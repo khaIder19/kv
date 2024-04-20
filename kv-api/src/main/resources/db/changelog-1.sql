@@ -5,8 +5,9 @@ CREATE TABLE entry_user (
     id UUID PRIMARY KEY,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
-    "name" VARCHAR NOT NULL
+    "name" VARCHAR(16) NOT NULL
 );
+ALTER TABLE entry_user ADD CONSTRAINT uniq_entry_user_name UNIQUE ("name");
 
 --changeset kiderr:folder_ddl
 CREATE SEQUENCE IF NOT EXISTS seq_gen_id_folder;

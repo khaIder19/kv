@@ -4,6 +4,8 @@
  */
 package com.kv.entry.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.kv.entry.asp.i18n.I18nSerializer;
 import jakarta.ws.rs.core.Response;
 
 /**
@@ -15,7 +17,12 @@ public class ErrorInfoDto {
     private int status;
     private String code;
     private String field;
+    @JsonSerialize(using = I18nSerializer.class)
     private String message;
+    
+    public ErrorInfoDto(){
+        
+    }
 
     public ErrorInfoDto(String code, String message) {
         this(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(),code,null,message);
@@ -63,6 +70,10 @@ public class ErrorInfoDto {
     public void setMessage(String message) {
         this.message = message;
     }
-    
-    
+
+    @Override
+    public String toString() {
+        return "ErrorInfoDto{" + "status=" + status + ", code=" + code + ", field=" + field + ", message=" + message + '}';
+    }
+      
 }

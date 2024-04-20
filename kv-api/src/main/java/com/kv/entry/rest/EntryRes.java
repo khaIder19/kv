@@ -30,6 +30,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
+import com.kv.entry.asp.event.DaoEvent;
+import com.kv.entry.asp.event.DaoEventParam;
 
 /**
  *
@@ -48,11 +50,17 @@ public class EntryRes {
     
     @GET
     @FolderRoleAllowed(FolderPermissionType.READ)    
-    public Response getByFolderId(@PathParam("folderId")Long folderId,@QueryParam("page") Integer page,
-            @QueryParam("size") Integer size){
-        List<Entry> resultList = dao.findByFolderId(folderId,Page.of(page, size));
-        Log.debugf("With size : %s", resultList.size());        
-        return Response.ok(resultList).build();
+    public Response getByFolderId(@PathParam("folderId")Long folderId,@QueryParam("page") Integer index,
+            @QueryParam("size") Integer size,@QueryParam("count")boolean isCount){
+        Object result = null;
+        Page page = index != null && size != null ? Page.of(index, size) : null;
+        if(isCount){
+            result = dao.queryByFolderId(folderId, page).count();
+        }else{
+            result = dao.findByFolderId(folderId,page);            
+            Log.debugf("With size : %s", ((List)result).size());     
+        }   
+        return Response.ok(result).build();
     }
     
     @Path("/{id}")
@@ -68,10 +76,13 @@ public class EntryRes {
     @Path("/{id}")
     @DELETE
     @FolderRoleAllowed(FolderPermissionType.WRITE)
-    public void delete(@PathParam("id")Long id){
+    @DaoEventParam(method = "DELETE",type = Entry.class)    
+    @DaoEvent
+    public Response delete(@PathParam("id")Long id){
         Entry entry = dao.findById(id);
         if(entry == null) throw new NotFoundException();
-        dao.deleteById(entry.getId());        
+        dao.deleteById(entry.getId());      
+        return Response.ok(entry.asPojo()).build();
     }
     
     @Transactional
@@ -85,28 +96,32 @@ public class EntryRes {
     @Transactional
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    @FolderRoleAllowed(FolderPermissionType.WRITE)    
+    @FolderRoleAllowed(FolderPermissionType.WRITE) 
+    @DaoEventParam(method = "CREATE",type = Entry.class)    
+    @DaoEvent   
     public Response create(@PathParam("folderId")Long fId,Entry e){
         Folder ef = efDao.findById(fId);
         if(ef == null) throw new NotFoundException();
         Log.debugf("With key: %s & value: %s", e.getKey(),e.getValue());        
         Entry entry = new Entry(ef,e.getKey(), e.getValue());
         dao.persist(entry);
-        return Response.created(URI.create("/entry/"+entry.getId())).build();
+        return Response.created(URI.create("/entry/"+entry.getId())).entity(entry).build();
     }
     
     @Transactional
     @Path("/{id}")
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)    
-    @FolderRoleAllowed(FolderPermissionType.WRITE)    
-    public Entry update(@PathParam("id")Long id,Entry e){
+    @FolderRoleAllowed(FolderPermissionType.WRITE)
+    @DaoEventParam(method = "UPDATE",type = Entry.class)    
+    @DaoEvent
+    public Response update(@PathParam("id")Long id,Entry e){
         Entry entry = dao.findById(id);
         if(entry != null){
             Log.debugf("With key: %s & value: %s", e.getKey(),e.getValue());
             entry.setKey(e.getKey());
             entry.setValue(e.getValue());
-            return entry;
+            return Response.ok(entry.asPojo()).build();
         }else{
             throw new NotFoundException();
         }

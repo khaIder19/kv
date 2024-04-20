@@ -16,9 +16,7 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 /**
@@ -55,13 +53,17 @@ public class AppAuthFilter implements ContainerRequestFilter{
                     .getByFolderAndUser(folderId, getPrincipalId());
             
             if(folderPermission == null || !checkFolderRole(folderRole, folderPermission)){
-                throw new ForbiddenException("You have no role");
+                throw new ForbiddenException("exc.folder-permission.act.forbidden");
             }
         }
     }
     
     private boolean checkFolderRole(FolderRoleAllowed role,FolderPermission permission){
            if(!(permission.getPermissionType() == FolderPermissionType.OWNER)){
+               if(permission.getPermissionType() == FolderPermissionType.WRITE &&
+                       role.value()[0] == FolderPermissionType.READ){
+                  return true; 
+               }
                return role.value()[0] == permission.getPermissionType();
            }
            return true;

@@ -8,8 +8,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
 /**
@@ -25,7 +23,6 @@ public class EntryUser extends BaseEntity{
     private UUID id;
     
     @Column(name = "name")
-    @NotNull
     private String name;
     
     protected EntryUser(){}
@@ -42,5 +39,10 @@ public class EntryUser extends BaseEntity{
     public String getName() {
         return name;
     }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     
 }
