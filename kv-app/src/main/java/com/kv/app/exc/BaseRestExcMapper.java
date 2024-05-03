@@ -5,7 +5,6 @@
 package com.kv.app.exc;
 
 import jakarta.ws.rs.core.Response;
-import java.util.Arrays;
 import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
 
 /**
@@ -17,7 +16,12 @@ public class BaseRestExcMapper implements ResponseExceptionMapper<AppManagedExce
     @Override
     public AppManagedException toThrowable(Response rspns) {
         ErrorDto errorDto = (ErrorDto) rspns.readEntity(ErrorDto.class);               
-        return new AppManagedException(Arrays.toString(errorDto.getErrors().toArray()));
+        String finalErrorMessage = "";
+        for(ErrorInfoDto errInfo : errorDto.getErrors()){
+            finalErrorMessage = finalErrorMessage.concat(" - ").concat(errInfo.getMessage()).concat("\n");
+        }
+        
+        return new AppManagedException(finalErrorMessage);
     }
     
 }

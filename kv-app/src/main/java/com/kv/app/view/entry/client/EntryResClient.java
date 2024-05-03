@@ -7,12 +7,11 @@ package com.kv.app.view.entry.client;
 import com.kv.app.view.entry.data.EntryDto;
 import com.kv.app.view.entry.data.FolderDto;
 import com.kv.app.exc.BaseRestExcMapper;
-import com.kv.app.view.entry.data.EntryUserDto;
 import io.quarkus.oidc.token.propagation.AccessTokenRequestFilter;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
-import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -38,49 +37,54 @@ public interface EntryResClient {
     @GET
     @Path("/folder")       
     List<FolderDto> getAllFoldersByUser(@QueryParam("permissionType")String fPermType,@QueryParam("page")Integer page,
-            @QueryParam("size")Integer size);
+            @QueryParam("size")Integer size,@HeaderParam("lang")String lang);
     
     @GET
     @Path("/folder/{folderId}")   
     @Produces(MediaType.APPLICATION_JSON)     
-    FolderDto getFolderById(@PathParam("folderId")Long folderId);
+    FolderDto getFolderById(@PathParam("folderId")Long folderId,@HeaderParam("lang")String lang);
     
     @DELETE
     @Path("/folder/{folderId}")   
-    Response deleteFolderById(@PathParam("folderId")Long id);
+    Response deleteFolderById(@PathParam("folderId")Long id,@HeaderParam("lang")String lang);
     
     @PUT
     @Path("/folder/{folderId}")   
-    Response upadeFolderById(@PathParam("folderId")Long id,FolderDto folderDto);    
+    Response upadeFolderById(@PathParam("folderId")Long id,FolderDto folderDto,@HeaderParam("lang")String lang);    
     
     @DELETE
     @Path("/folder/{folderId}/folder_permission/{permissionId}")   
-    Response deleteFolderPermissionById(@PathParam("folderId")Long folderId,@PathParam("permissionId")Long id);    
+    Response deleteFolderPermissionById(@PathParam("folderId")Long folderId,
+            @PathParam("permissionId")Long id,@HeaderParam("lang")String lang);    
     
     @POST
     @Path("/folder")    
     @Produces(MediaType.APPLICATION_JSON)
-    FolderDto createFolder(FolderDto dto);
+    FolderDto createFolder(FolderDto dto,@HeaderParam("lang")String lang);
     
     @GET
     @Path("/folder/{folderId}/entry")   
     @Produces(MediaType.APPLICATION_JSON)     
     List<EntryDto> getAllEntryByFolderId(@PathParam("folderId")Long folderId,
             @QueryParam("page")Integer page,@QueryParam("size")Integer size,
-            @QueryParam("count")Boolean count);    
+            @QueryParam("count")Boolean count,@HeaderParam("lang")String lang);    
     
     @DELETE
     @Path("/folder/{folderId}/entry/{entryId}")   
     @Produces(MediaType.APPLICATION_JSON)     
-    Response deleteEntryById(@PathParam("folderId")Long folderId,@PathParam("entryId")Long entryId); 
+    Response deleteEntryById(@PathParam("folderId")Long folderId,
+            @PathParam("entryId")Long entryId,@HeaderParam("lang")String lang); 
     
     @POST
     @Path("/folder/{folderId}/entry")   
     @Produces(MediaType.APPLICATION_JSON)     
-    EntryDto createEntry(@PathParam("folderId")Long folderId,EntryDto entryDto);
+    EntryDto createEntry(@PathParam("folderId")Long folderId,
+            EntryDto entryDto,@HeaderParam("lang")String lang);
     
     @PUT
     @Path("/folder/{folderId}/entry/{entryId}")   
-    @Produces(MediaType.APPLICATION_JSON)     
-    EntryDto updateEntry(@PathParam("folderId")Long folderId,@PathParam("entryId")Long entryId,EntryDto entryDto);    
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)        
+    Response updateEntry(@PathParam("folderId")Long folderId,
+            @PathParam("entryId")Long entryId,EntryDto entryDto,@HeaderParam("lang")String lang);    
 }

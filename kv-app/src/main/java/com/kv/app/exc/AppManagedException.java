@@ -10,6 +10,8 @@ package com.kv.app.exc;
  */
 public class AppManagedException extends RuntimeException{
 
+    
+    
     public AppManagedException(String message) {
         super(message);
     }

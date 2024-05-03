@@ -134,7 +134,7 @@ public class FolderRes{
     @POST
     public Response create(Folder ef){
         EntryUser entryUser = userDao.findById(subj);
-        if(entryUser == null)throw new ServiceUnavailableException();
+        if(entryUser == null)throw new ServiceUnavailableException("exc.web.service_unavailable");
         
         Folder entryFolder = new Folder(ef.getName(),entryUser);
         dao.persist(entryFolder);

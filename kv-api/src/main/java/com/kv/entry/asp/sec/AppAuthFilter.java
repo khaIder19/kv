@@ -53,7 +53,7 @@ public class AppAuthFilter implements ContainerRequestFilter{
                     .getByFolderAndUser(folderId, getPrincipalId());
             
             if(folderPermission == null || !checkFolderRole(folderRole, folderPermission)){
-                throw new ForbiddenException("exc.folder-permission.act.forbidden");
+                throw new ForbiddenException();
             }
         }
     }

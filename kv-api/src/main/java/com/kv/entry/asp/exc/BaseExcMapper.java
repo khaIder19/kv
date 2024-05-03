@@ -37,7 +37,7 @@ public class BaseExcMapper implements ExceptionMapper<Exception>{
         Log.error("Unhandled exception thrown", e);
         ErrorDto errorDto = new ErrorDto();
         int status = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();                
-        ErrorInfoDto errorInfoDto = new ErrorInfoDto(e.getClass().getSimpleName(),e.getMessage());
+        ErrorInfoDto errorInfoDto = new ErrorInfoDto(e.getClass().getSimpleName(),"exc.web.status.500");
         errorDto.addError(errorInfoDto);
         return Response.status(status).entity(errorDto).type(MediaType.APPLICATION_JSON).build();
     }

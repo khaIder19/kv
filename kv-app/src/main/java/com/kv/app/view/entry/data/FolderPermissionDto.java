@@ -4,7 +4,6 @@
  */
 package com.kv.app.view.entry.data;
 
-import java.util.UUID;
 
 /**
  *

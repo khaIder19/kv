@@ -66,10 +66,15 @@
             <artifactId>quarkus-oidc-token-propagation</artifactId>
         </dependency>
         
-<dependency>
-    <groupId>io.quarkus</groupId>
-    <artifactId>quarkus-keycloak-admin-client-reactive</artifactId>
-</dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-reactive-messaging-rabbitmq</artifactId>
+        </dependency>
+                       
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-container-image-docker</artifactId>
+        </dependency>        
 
         <!-- Uncomment the following if you are using any of the Pro components -->
         <!--

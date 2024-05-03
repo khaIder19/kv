@@ -4,6 +4,7 @@
  */
 package com.kv.app.view.entry;
 
+import com.kv.app.KvAppUtils;
 import com.kv.app.exc.BaseExcMapper;
 import com.kv.app.view.entry.data.FolderDto;
 import com.kv.app.view.entry.data.FolderPermissionDto;
@@ -26,15 +27,14 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
-import io.quarkus.oidc.IdToken;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.UUID;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import com.kv.app.view.entry.client.EntryResClient;
+import jakarta.inject.Named;
 
 /**
  *
@@ -47,8 +47,12 @@ public class FoldersView extends VerticalLayout{
     public static final String PATH = "folders";
     
     @Inject
-    @IdToken
-    private JsonWebToken token;
+    @Named("subjUUID")
+    private UUID currentUserId;
+    
+    @Inject
+    @Named("subjLang")
+    private String userLang;    
     
     @RestClient
     private EntryResClient entryResClient;
@@ -57,12 +61,10 @@ public class FoldersView extends VerticalLayout{
     private final ListDataProvider<FolderDto> folderItemsProvider;
     
     private List<FolderDto> foldersData;
-    private UUID currentUserId;
     private FolderPermissionType fptFilter;
     
     @PostConstruct
     public void postCon(){
-      currentUserId = UUID.fromString(token.getSubject());
       VaadinSession.getCurrent().setErrorHandler(new BaseExcMapper());
       refreshFolderData();
     }
@@ -72,15 +74,15 @@ public class FoldersView extends VerticalLayout{
         setHeightFull();
         foldersData = new ArrayList<>();
         
-        Tab allTab = new Tab("All");
-        allTab.setId("allTab");
-        Tab mineTab = new Tab("Mine");
-        mineTab.setId("mineTab");
+        Tab allTab = new Tab(KvAppUtils.getResString("view.folders.tab.all"));
+        allTab.setId("all");
+        Tab mineTab = new Tab(KvAppUtils.getResString("view.folders.tab.mine"));
+        mineTab.setId("mine");
         Tabs tabs = new Tabs(allTab, mineTab);
         tabs.addSelectedChangeListener(new ComponentEventListener<Tabs.SelectedChangeEvent>(){
             @Override
             public void onComponentEvent(Tabs.SelectedChangeEvent t) {
-                if(t.getSelectedTab().getLabel().equals("mineTab")){
+                if(t.getSelectedTab().getId().get().equals("mine")){
                     fptFilter = FolderPermissionType.OWNER;
                 }else{
                     fptFilter = null;
@@ -92,11 +94,12 @@ public class FoldersView extends VerticalLayout{
        
         TextField folderNameField = new TextField();
         
-        Button insertFolderButton = new Button("Add folder", VaadinIcon.PLUS.create(),
+        Button insertFolderButton = new Button(KvAppUtils.getResString("view.folders.insert"),
+                VaadinIcon.PLUS.create(),
                 e->{
                 FolderDto dto = new FolderDto();
                 dto.setName(folderNameField.getValue());
-                entryResClient.createFolder(dto);
+                entryResClient.createFolder(dto,userLang);
                 refreshFolderData();
                 });
         
@@ -115,29 +118,32 @@ public class FoldersView extends VerticalLayout{
     
     private Component getFolderItemView(FolderDto folderDto){
         Span folderNameSpan = new Span(folderDto.getName());
-        folderNameSpan.addClassName("folders-view-span-1");
         Span ownerNameSpan = new Span(folderDto.getOwner().getName());
         Span permissionSpan = new Span(getCurrentUserPermissionOfFolder(folderDto));
         
-        Button deleteButton = new Button(VaadinIcon.PLUS.create(),e->{
-                entryResClient.deleteFolderById(folderDto.getId());
+        Button deleteButton = new Button(VaadinIcon.TRASH.create(),e->{
+                entryResClient.deleteFolderById(folderDto.getId(),userLang);
                 refreshFolderData();
         });
-        deleteButton.addClassName("folders-view-button-1");
+
         deleteButton.addThemeVariants(ButtonVariant.LUMO_ICON);
-        deleteButton.getElement().setAttribute("aria-label", "Add item");
+        deleteButton.getElement().setAttribute("aria-label", "Add item");        
+        deleteButton.setWidth("5%");
         
-        HorizontalLayout itemViewParent = new HorizontalLayout();
-        itemViewParent.addClickListener(t->{
-                itemViewParent.getUI().ifPresent(ui -> ui.navigate(
+        HorizontalLayout itemViewSubParent = new HorizontalLayout(VaadinIcon.FOLDER.create(),
+        folderNameSpan,ownerNameSpan,permissionSpan);
+        itemViewSubParent.setAlignItems(Alignment.CENTER);
+        itemViewSubParent.setJustifyContentMode(JustifyContentMode.AROUND);
+        itemViewSubParent.addClickListener(t->{
+                itemViewSubParent.getUI().ifPresent(ui -> ui.navigate(
                 FolderItemView.class, folderDto.getId()));
-        });
+        });  
+        itemViewSubParent.setWidth("95%");
+        
+        
+        HorizontalLayout itemViewParent = new HorizontalLayout(itemViewSubParent,deleteButton);
         itemViewParent.addClassName("folders-view-horizontal-layout-1");
-        itemViewParent.setJustifyContentMode(JustifyContentMode.AROUND);
-        itemViewParent.setAlignItems(Alignment.CENTER);
-        itemViewParent.add(VaadinIcon.FOLDER.create());
-        itemViewParent.add(folderNameSpan,ownerNameSpan,
-                permissionSpan,deleteButton);
+        
         return itemViewParent;
     }
     
@@ -151,7 +157,7 @@ public class FoldersView extends VerticalLayout{
     
     private void refreshFolderData(){
         List<FolderDto> newList = entryResClient.getAllFoldersByUser(fptFilter != null ? fptFilter.name() : null,
-                null, null);
+                null, null,userLang);
         foldersData.clear();
         foldersData.addAll(newList);
         folderItemsProvider.refreshAll();

@@ -10,10 +10,7 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinRequest;
 import com.vaadin.flow.server.auth.ViewAccessChecker;
-import io.quarkus.oidc.IdToken;
 import jakarta.annotation.security.PermitAll;
-import jakarta.inject.Inject;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 
 @Route
 @PermitAll

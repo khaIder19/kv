@@ -1,26 +1,23 @@
 package com.kv.app.view;
 
+import com.kv.app.KvAppUtils;
 import com.kv.app.view.entry.FoldersView;
-import com.kv.app.view.entry.client.EntryResClient;
-import com.kv.app.view.entry.data.FolderDto;
+import com.vaadin.flow.component.AttachEvent;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
-import io.quarkus.logging.Log;
-import io.quarkus.oidc.IdToken;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
-import jakarta.enterprise.context.Dependent;
-import jakarta.inject.Inject;
-import org.eclipse.microprofile.jwt.JsonWebToken;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  * The main view contains a button and a click listener.
@@ -29,12 +26,26 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 @RolesAllowed("user")
 public class MainView extends AppLayout {
     
-    public MainView() {
+    @ConfigProperty(name = "quarkus.oidc.auth-server-url")
+    String authUrl;
+    
+
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        super.onAttach(attachEvent);
+        
         DrawerToggle toggle = new DrawerToggle();
 
-        H1 title = new H1("MyApp");
+        H1 title = new H1("KeyVal");
         title.getStyle().set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "0");
+        
+        Button logoutButton = new Button(VaadinIcon.ESC.create(), e->{
+        UI.getCurrent().getPage().setLocation("/logout");
+        });
+        
+        HorizontalLayout titleAndlogOutLayout = new HorizontalLayout(title,logoutButton);
+        titleAndlogOutLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.AROUND);
 
         SideNav nav = getSideNav();
 
@@ -42,16 +53,22 @@ public class MainView extends AppLayout {
         scroller.setClassName(LumoUtility.Padding.SMALL);
 
         addToDrawer(scroller);
-        addToNavbar(toggle, title);
-        
+        addToNavbar(toggle, titleAndlogOutLayout);
     }
+    
+    
     
     
     private SideNav getSideNav(){
         SideNav nav = new SideNav();
-        SideNavItem foldersLink = new SideNavItem("Folders",FoldersView.class, VaadinIcon.FOLDER.create());
-        SideNavItem settingsLink = new SideNavItem("Settings",SettingsView.class, VaadinIcon.EDIT.create());
-        nav.addItem(foldersLink,settingsLink);
+        SideNavItem foldersLink = new SideNavItem(KvAppUtils.getResString("menu.folders"),
+                FoldersView.class, VaadinIcon.FOLDER.create());
+        
+        SideNavItem settingsLink = new SideNavItem(KvAppUtils.getResString("menu.settings"),
+                authUrl+"/account", VaadinIcon.EDIT.create());
+        
+        nav.addItem(foldersLink,settingsLink);        
+        
         return nav;
     }
 }

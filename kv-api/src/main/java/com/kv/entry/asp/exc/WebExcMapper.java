@@ -35,8 +35,14 @@ public class WebExcMapper implements ExceptionMapper<WebApplicationException>{
         ErrorDto errorDto = new ErrorDto();
         ErrorInfoDto errorInfoDto = null;              
         int status = e.getResponse().getStatus();
+        
+        String msg = e.getMessage();
+        if(!msg.startsWith("exc.")){
+            msg = "exc.web.status."+status;
+        }
+        
         errorInfoDto = new ErrorInfoDto(status,
-                    e.getClass().getSimpleName(),null,e.getMessage());
+                    e.getClass().getSimpleName(),null,msg);
         errorDto.addError(errorInfoDto);
         return Response.status(status).entity(errorDto).type(MediaType.APPLICATION_JSON).build();
     }    

@@ -4,7 +4,7 @@
  */
 package com.kv.app.view.entry.data;
 
-import com.kv.app.BaseDto;
+import com.kv.app.common.BaseDto;
 
 /**
  *
