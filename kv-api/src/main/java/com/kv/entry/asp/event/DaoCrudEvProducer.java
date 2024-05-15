@@ -5,12 +5,15 @@
 package com.kv.entry.asp.event;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kv.entry.dto.BaseDaoEventDto;
+import com.kv.entry.dto.DtoViews;
 import io.quarkus.logging.Log;
+import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.time.Instant;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
-
 /**
  *
  * @author k-iderr
@@ -19,13 +22,20 @@ import org.eclipse.microprofile.reactive.messaging.Emitter;
 @ApplicationScoped
 public class DaoCrudEvProducer {    
   
-    @Channel("kv-entry-crud-events")Emitter<BaseDaoEventDto> emitter;
+    @Channel("kv-crud-events")Emitter<JsonObject> emitter;
    
+    private ObjectMapper eventObjMapper;
+    
+    public DaoCrudEvProducer(){
+        eventObjMapper = new ObjectMapper();
+    }
     
     public boolean publishDaoEvent(String method,String type,Object entity){
         try {
             BaseDaoEventDto dto = buildBaseDaoEventDto(method, type, entity);
-            publishFinalMessage(dto);
+            String dtoAsJson = eventObjMapper.writerWithView(DtoViews.Event.class)
+                    .writeValueAsString(dto);
+            publishFinalMessage(dtoAsJson);
             Log.debugf("Dao event message sent, with etity : %s , method : %s , type : %s",
                     entity,method,type);
             return true;
@@ -37,11 +47,11 @@ public class DaoCrudEvProducer {
     }
     
 
-    void publishFinalMessage(BaseDaoEventDto eventDto){
-        emitter.send(eventDto);
+    void publishFinalMessage(String eventAsJson){
+        emitter.send(new JsonObject(eventAsJson));
     }
     
-    BaseDaoEventDto buildBaseDaoEventDto(String method,String type,Object entity) throws JsonProcessingException{       
+    BaseDaoEventDto buildBaseDaoEventDto(String method,String type,Object entity){       
         BaseDaoEventDto dto = new BaseDaoEventDto();        
         dto.setTime(Instant.now().getEpochSecond());
         dto.setEventType("CRUD_EVENT");
@@ -49,55 +59,5 @@ public class DaoCrudEvProducer {
         dto.setCrudType(method);
         dto.setPayload(entity);
         return dto;
-    }
-    
-    private static class BaseDaoEventDto{
-        private long time;
-        private String eventType;
-        private String payloadType;
-        private String crudType;
-        private Object payload;
-
-        public long getTime() {
-            return time;
-        }
-
-        public void setTime(long time) {
-            this.time = time;
-        }
-
-        public String getEventType() {
-            return eventType;
-        }
-
-        public void setEventType(String eventType) {
-            this.eventType = eventType;
-        }
-
-        public String getPayloadType() {
-            return payloadType;
-        }
-
-        public void setPayloadType(String payloadType) {
-            this.payloadType = payloadType;
-        }
-
-        public String getCrudType() {
-            return crudType;
-        }
-
-        public void setCrudType(String crudType) {
-            this.crudType = crudType;
-        }
-
-        public Object getPayload() {
-            return payload;
-        }
-
-        public void setPayload(Object payload) {
-            this.payload = payload;
-        }
-        
-        
     }
 }

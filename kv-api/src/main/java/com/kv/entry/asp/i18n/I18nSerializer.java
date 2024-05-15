@@ -40,7 +40,8 @@ public class I18nSerializer extends StdSerializer{
             value = getResBundle().getString(key);
             jg.writeString(value);
         }catch(MissingResourceException e){
-            sp.defaultSerializeValue(t, jg);
+            Log.errorf("Missing resource for key : %s", key);
+            sp.defaultSerializeValue(t, jg);            
         }
         Log.debugf("The key %s us serialized with i18n value %s", key,value);
     }

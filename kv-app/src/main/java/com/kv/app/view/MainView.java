@@ -2,6 +2,7 @@ package com.kv.app.view;
 
 import com.kv.app.KvAppUtils;
 import com.kv.app.view.entry.FoldersView;
+import com.kv.app.view.notification.NotificationsView;
 import com.vaadin.flow.component.AttachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
@@ -40,13 +41,15 @@ public class MainView extends AppLayout {
         title.getStyle().set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "0");
         
-        Button logoutButton = new Button(VaadinIcon.ESC.create(), e->{
+        Button logoutButton = new Button(VaadinIcon.EXIT.create(), e->{
         UI.getCurrent().getPage().setLocation("/logout");
         });
         
         HorizontalLayout titleAndlogOutLayout = new HorizontalLayout(title,logoutButton);
         titleAndlogOutLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.AROUND);
-
+        titleAndlogOutLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+        titleAndlogOutLayout.setWidthFull();
+        
         SideNav nav = getSideNav();
 
         Scroller scroller = new Scroller(nav);
@@ -64,10 +67,13 @@ public class MainView extends AppLayout {
         SideNavItem foldersLink = new SideNavItem(KvAppUtils.getResString("menu.folders"),
                 FoldersView.class, VaadinIcon.FOLDER.create());
         
+        SideNavItem notificationsLink = new SideNavItem(KvAppUtils.getResString("menu.notifications"),
+                NotificationsView.class, VaadinIcon.BELL.create());        
+        
         SideNavItem settingsLink = new SideNavItem(KvAppUtils.getResString("menu.settings"),
                 authUrl+"/account", VaadinIcon.EDIT.create());
         
-        nav.addItem(foldersLink,settingsLink);        
+        nav.addItem(foldersLink,notificationsLink,settingsLink);        
         
         return nav;
     }

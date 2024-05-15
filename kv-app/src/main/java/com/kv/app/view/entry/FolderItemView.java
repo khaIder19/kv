@@ -31,12 +31,15 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import com.kv.app.view.entry.client.EntryResClient;
 import com.kv.app.view.entry.data.FolderPermissionDto;
 import com.kv.app.view.MainView;
+import com.kv.app.view.entry.data.FolderPermissionType;
+import com.kv.app.view.notification.dto.FolderInviteDto;
+import com.kv.app.view.notification.client.NotifResClient;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Span;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import jakarta.inject.Named;
+import java.util.UUID;
 
 /**
  *
@@ -50,10 +53,17 @@ public class FolderItemView extends VerticalLayout implements HasUrlParameter<Lo
     
     @RestClient
     private EntryResClient entryResClient;
+    
+    @RestClient
+    private NotifResClient notifResClient;    
 
     @Inject
     @Named("subjLang")
     private String userLang;
+    
+    @Inject
+    @Named("subjUUID")
+    private UUID subjUuid;    
     
     private final VirtualList<EntryDto> entryItems;
     private final ListDataProvider<EntryDto> entryItemsProvider;
@@ -206,8 +216,10 @@ public class FolderItemView extends VerticalLayout implements HasUrlParameter<Lo
     private Dialog getEntryEditDialog(EntryDto entryDto){
         TextField entryKeyTxField = new TextField();
         entryKeyTxField.setLabel(KvAppUtils.getResString("dto.EntryDto.key"));
+        entryKeyTxField.setWidth("50%");
         TextField entryValueTxField = new TextField();
         entryValueTxField.setLabel(KvAppUtils.getResString("dto.EntryDto.value"));
+        entryValueTxField.setWidth("50%");        
         
         if(entryDto != null){
             entryKeyTxField.setValue(entryDto.getKey());
@@ -245,7 +257,16 @@ public class FolderItemView extends VerticalLayout implements HasUrlParameter<Lo
         HorizontalLayout sendInviteLayout = new HorizontalLayout(sendToEmailField,select);
         Dialog dialog = KvAppUtils.getBasicDialog(KvAppUtils.getResString("view.folder.invite_user"), sendInviteLayout,
                 e->{
-                         Notification.show("Notification sent");                
+                    if(folderDto.getOwner().getId().equals(subjUuid)){
+                        int indexOfSelectFp = select.getItemPosition(select.getValue());
+                        FolderPermissionType fpt = FolderPermissionType.values()[indexOfSelectFp+1];
+                                
+                        FolderInviteDto fInvDto = new FolderInviteDto(folderDto.getId(),
+                                folderDto.getName(), sendToEmailField.getValue(),
+                                fpt.name());
+                        
+                        notifResClient.sendFolderInvite(fInvDto);
+                    }                
                 });
              
         return dialog;   

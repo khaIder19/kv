@@ -22,16 +22,8 @@ public class BaseExcMapper implements ExceptionMapper<Exception>{
     
     @Override
     public Response toResponse(Exception e){
-        Throwable cause = e;
-        while(cause.getCause() != null && cause.getCause() != cause) {
-            cause = cause.getCause();
-        }
-        
-        if(cause instanceof ConstraintViolationException){
-            return new RollBackExcMapper().toResponse((ConstraintViolationException) cause);
-        }else if(cause instanceof jakarta.validation.ConstraintViolationException){
-            return new ConstrExcMapper().toResponse((jakarta.validation.ConstraintViolationException) cause);
-        }
+        Response nestedExcHandlingResponse = manageNestedCause(e);
+        if(nestedExcHandlingResponse != null) return nestedExcHandlingResponse;
         
         
         Log.error("Unhandled exception thrown", e);
@@ -40,6 +32,19 @@ public class BaseExcMapper implements ExceptionMapper<Exception>{
         ErrorInfoDto errorInfoDto = new ErrorInfoDto(e.getClass().getSimpleName(),"exc.web.status.500");
         errorDto.addError(errorInfoDto);
         return Response.status(status).entity(errorDto).type(MediaType.APPLICATION_JSON).build();
+    }
+    
+    private Response manageNestedCause(Throwable e){
+        Throwable cause = e;    
+        while(cause.getCause() != null && cause.getCause() != cause) {            
+            cause = cause.getCause();
+        if(cause instanceof ConstraintViolationException){
+            return new RollBackExcMapper().toResponse((ConstraintViolationException) cause);
+        }else if(cause instanceof jakarta.validation.ConstraintViolationException){
+            return new ConstrExcMapper().toResponse((jakarta.validation.ConstraintViolationException) cause);
+        }            
+        }
+        return null;
     }
              
 }

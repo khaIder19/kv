@@ -7,7 +7,6 @@ package com.kv.entry.rest;
 import com.kv.entry.asp.sec.FolderRoleAllowed;
 import com.kv.entry.dao.EntryDao;
 import com.kv.entry.dao.FolderDao;
-import com.kv.entry.dto.BatchIdObjDto;
 import com.kv.entry.model.Entry;
 import com.kv.entry.model.Folder;
 import com.kv.entry.model.FolderPermissionType;
@@ -32,6 +31,8 @@ import java.net.URI;
 import java.util.List;
 import com.kv.entry.asp.event.DaoEvent;
 import com.kv.entry.asp.event.DaoEventParam;
+import jakarta.inject.Named;
+import java.util.UUID;
 
 /**
  *
@@ -47,6 +48,10 @@ public class EntryRes {
     
     @Inject
     private FolderDao efDao;
+    
+    @Inject
+    @Named("subjUUID")
+    private UUID subj;    
     
     @GET
     @FolderRoleAllowed(FolderPermissionType.READ)    
@@ -81,16 +86,9 @@ public class EntryRes {
     public Response delete(@PathParam("id")Long id){
         Entry entry = dao.findById(id);
         if(entry == null) throw new NotFoundException();
+        entry.setModifiedBy(subj);
         dao.deleteById(entry.getId());      
         return Response.ok(entry.asPojo()).build();
-    }
-    
-    @Transactional
-    @Path("/deleteByIds")
-    @POST
-    @FolderRoleAllowed(FolderPermissionType.WRITE)
-    public void deleteByIds(@PathParam("folderId")Long fId,BatchIdObjDto<Long,Void> dto){
-        dao.deleteByIds(fId,dto.getIds());
     }
     
     @Transactional
@@ -104,8 +102,10 @@ public class EntryRes {
         if(ef == null) throw new NotFoundException();
         Log.debugf("With key: %s & value: %s", e.getKey(),e.getValue());        
         Entry entry = new Entry(ef,e.getKey(), e.getValue());
+        entry.setModifiedBy(subj);
         dao.persist(entry);
-        return Response.created(URI.create("/entry/"+entry.getId())).entity(entry).build();
+        return Response.created(URI.create("/api/folder/"+fId+"/entry/"+
+                entry.getId())).entity(entry).build();
     }
     
     @Transactional
@@ -121,6 +121,7 @@ public class EntryRes {
             Log.debugf("With key: %s & value: %s", e.getKey(),e.getValue());
             entry.setKey(e.getKey());
             entry.setValue(e.getValue());
+            entry.setModifiedBy(subj);
             return Response.ok(entry.asPojo()).build();
         }else{
             throw new NotFoundException();

@@ -4,7 +4,6 @@
  */
 package com.kv.entry.asp.event;
 
-import io.quarkus.logging.Log;
 import jakarta.inject.Inject;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
@@ -36,7 +35,8 @@ public class DaoEventListener {
             if(result instanceof Response){
                 Response response = (Response) result;
                 if(response.getStatus() == 200 || response.getStatus() == 201){
-                evProducer.publishDaoEvent(crudMethod,type,response.getEntity());                  
+                Object entity = response.getEntity();          
+                evProducer.publishDaoEvent(crudMethod,type,entity);                  
                 }                
             }
         }

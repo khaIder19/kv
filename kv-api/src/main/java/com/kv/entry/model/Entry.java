@@ -4,7 +4,8 @@
  */
 package com.kv.entry.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.kv.entry.dto.DtoViews;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,7 +18,9 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.util.UUID;
 
 /**
  *
@@ -46,11 +49,15 @@ public class Entry extends BaseEntity{
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "folder_id")
-    @JsonIgnore
+    @JsonView(DtoViews.Event.class)
     private Folder folder;
     
     @Column(name = "folder_id",insertable = false,updatable = false)
     private Long folderId;
+    
+    @Column(name = "modified_by")
+    @NotNull
+    private UUID modifiedBy;    
     
     
     protected Entry(){}
@@ -62,16 +69,19 @@ public class Entry extends BaseEntity{
         this.folderId = folder.getId();
     }
     
-    private Entry(Long id,Long folderId,String key,String value){
+    private Entry(Long id,Folder folder,String key,String value,UUID modifiedBy){
         this.id = id;
-        this.folderId = folderId;
+        this.folderId = folder.getId();
+        this.folder = new Folder(folder.getName(),
+                new EntryUser(folder.getOwner().getId(),folder.getOwner().getName()));
         this.key = key;
         this.value = value;
+        this.modifiedBy = modifiedBy;
     }
     
     public Entry asPojo(){
-        return new Entry(getId().longValue(), getFolderId().longValue(),
-                getKey().toString(), getValue().toString());
+        return new Entry(getId().longValue(), getFolder(),
+                getKey().toString(), getValue().toString(),UUID.fromString(modifiedBy.toString()));
     }
 
     public Long getId() {
@@ -100,6 +110,14 @@ public class Entry extends BaseEntity{
 
     public Long getFolderId() {
         return folderId;
+    }
+
+    public void setModifiedBy(UUID modifiedBy) {
+        this.modifiedBy = modifiedBy;
+    }
+
+    public UUID getModifiedBy() {
+        return modifiedBy;
     }
 
     @Override

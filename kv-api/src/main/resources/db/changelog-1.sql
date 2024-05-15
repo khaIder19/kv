@@ -45,6 +45,7 @@ CREATE TABLE entry (
     id BIGINT PRIMARY KEY,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
+    modified_by UUID NOT NULL,
     "key" VARCHAR(32) NOT NULL,
     "value" TEXT,
     folder_id BIGINT

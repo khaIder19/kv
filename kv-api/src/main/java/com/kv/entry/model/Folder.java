@@ -1,6 +1,8 @@
 package com.kv.entry.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.kv.entry.dto.DtoViews;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -46,6 +48,7 @@ public class Folder extends BaseEntity{
     
     @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL,mappedBy = "folder")
     @JsonManagedReference
+    @JsonView(DtoViews.Rest.class)
     private List<FolderPermission> permissions;
     
     protected Folder(){}

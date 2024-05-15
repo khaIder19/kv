@@ -15,8 +15,9 @@ import java.util.UUID;
  */
 @ApplicationScoped
 public class FolderPermissionDao implements PanacheRepository<FolderPermission>{
-    public FolderPermission getByFolderAndUser(Long folderId,UUID userId){
+    public FolderPermission findByFolderAndUser(Long folderId,UUID userId){
         return find("SELECT fp FROM FolderPermission fp "
-                + "WHERE fp.folder.id = ?1 AND fp.user.id = ?2", folderId,userId).singleResult();
+                + "WHERE fp.folder.id = ?1 AND fp.user.id = ?2", folderId,userId)
+                .singleResultOptional().orElse(null);
     }  
 }

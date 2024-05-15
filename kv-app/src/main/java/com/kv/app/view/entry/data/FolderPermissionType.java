@@ -9,5 +9,5 @@ package com.kv.app.view.entry.data;
  * @author k-iderr
  */
 public enum FolderPermissionType {
-    OWNER,READ,WRTIE;
+    OWNER,READ,WRITE;
 }

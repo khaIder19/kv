@@ -50,7 +50,7 @@ public class AppAuthFilter implements ContainerRequestFilter{
             Long folderId = Long.valueOf(
                     crc.getUriInfo().getPathParameters().getFirst("folderId"));
             FolderPermission folderPermission = folderPermissionDao
-                    .getByFolderAndUser(folderId, getPrincipalId());
+                    .findByFolderAndUser(folderId, getPrincipalId());
             
             if(folderPermission == null || !checkFolderRole(folderRole, folderPermission)){
                 throw new ForbiddenException();
